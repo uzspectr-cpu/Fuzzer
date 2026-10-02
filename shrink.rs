@@ -72,4 +72,16 @@ fn refers_to(op: &Op, idx: usize) -> bool {
     }
 }
 
-fn shift_indices(op: &mut Op, removed:
+fn shift_indices(op: &mut Op, removed: usize) {
+    let fix = |v: &mut usize| { if *v > removed { *v -= 1; } };
+    match op {
+        Op::Splice { from, to, .. } => { fix(from); fix(to); }
+        Op::Vmsplice { to, .. } => fix(to),
+        Op::SendMsg { to, .. } => fix(to),
+        Op::RecvMsg { from, .. } => fix(from),
+        Op::CopyFileRange { src, dst, .. } => { fix(src); fix(dst); }
+        Op::SendFile { out, inp, .. } => { fix(out); fix(inp); }
+        Op::Fsync { fd, .. } => fix(fd),
+        _ => {}
+    }
+}
